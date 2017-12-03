@@ -7,5 +7,4 @@ data = to_entries(content.content)
 
 print("Importing %d rows" % len(data))
 
-sqlite.save(data=data, table_name="chart")
-sqlite.commit_transactions()
+sqlite.save(unique_keys=['position'], data=data, table_name="chart")
