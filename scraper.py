@@ -1,24 +1,40 @@
-# This is a template for a Python scraper on morph.io (https://morph.io)
-# including some code snippets below that you should find helpful
+import requests
+from bs4 import BeautifulSoup
 
-# import scraperwiki
-# import lxml.html
-#
-# # Read in a page
-# html = scraperwiki.scrape("http://foo.com")
-#
-# # Find something on the page using css selectors
-# root = lxml.html.fromstring(html)
-# root.cssselect("div[align='left']")
-#
-# # Write out to the sqlite database using scraperwiki library
-# scraperwiki.sqlite.save(unique_keys=['name'], data={"name": "susan", "occupation": "software developer"})
-#
-# # An arbitrary query against the database
-# scraperwiki.sql.select("* from data where 'name'='peter'")
+def calculate_movement(input):
+    if input[0:2] == "UP":
+        return int(input[2:])
+    elif input[0:4] == "DOWN":
+        return -int(input[4:])
+    else:
+        return 0
 
-# You don't have to do things with the ScraperWiki and lxml libraries.
-# You can use whatever libraries you want: https://morph.io/documentation/python
-# All that matters is that your final data is written to an SQLite database
-# called "data.sqlite" in the current working directory which has at least a table
-# called "data".
+def previous_position(rows):
+    if rows[1].text == "NEW":
+        return 0
+    else:
+        return int(rows[2].text)
+
+def row_to_entry(row):
+    rows = row.find_all("td")
+    return {
+        "position": int(rows[0].text),
+        "movement": calculate_movement(rows[1].text),
+        "previous_position": previous_position(rows),
+        "weeks": int(rows[3].text),
+        "artist": rows[4].text,
+        "title": rows[5].text
+    }
+
+def to_entries(content):
+    soup = BeautifulSoup(content, "xml")
+    return [ row_to_entry(row) for row in soup.find_all("tr") if not "Position" in row.text ]
+
+def main():
+    from scraperwiki import sqlite
+
+    content = requests.get("http://www.bbc.co.uk/radio1/chart/singles/print")
+    sqlite.save(unique_keys=['position'], data=to_entries(content.content))
+
+if __name__ == '__main__':
+    main()
