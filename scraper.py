@@ -7,4 +7,4 @@ data = to_entries(content.content)
 
 print("Importing %d rows" % len(data))
 
-sqlite.save(unique_keys=['position'], data=data, table_name="chart")
+sqlite.save(unique_keys=['date', 'position'], data=data, table_name="chart")
